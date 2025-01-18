@@ -1,3 +1,4 @@
+#walle
 import json
 import random
 from textblob import TextBlob
@@ -12,4 +13,26 @@ class TextToSpeech:
         self.engine.say(text)
         self.engine.runAndWait()
 
-# Em Revisão 
+class SentimentAnalysis:
+    @staticmethod
+    def analyze_text(text):
+        analysis = TextBlob(text)
+        return analysis.sentiment.polarity
+    
+class CrisisSupport:
+    def __init__(self):
+        self.tts = TextToSpeech()
+        self.sentiment = SentimentAnalysis()
+
+    def detect_crisis(self):
+        print("\n[Walle] Analisando situação da criança...")
+        mood = input("Digite a descrição da situação: ")
+        mood_score = self.sentiment.analyze_text(mood)
+
+        if mood_score < -0.5:
+            return True, "Alta probabilidade de crise dectada."
+        elif mood_score < 0:
+            return True, "Sinais leves de estresse detectada."
+        else:
+            return False, "Nenhuma crise detectada."
+    
