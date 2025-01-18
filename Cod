@@ -36,3 +36,43 @@ class CrisisSupport:
         else:
             return False, "Nenhuma crise detectada."
     
+    def manage_crisis(self):
+        in_crisis, message = self.detect_crisis()
+        self.tts.speak(message)
+
+        if in_crisis:
+            action = self.suggest_action(message)
+            self.tts.speak(action)
+            print(f"\n[Walle] {action}")
+        else:
+            print("\n[Walle] Tudo parece bem no momento!")
+
+class InteractiveLearning:
+    def __init__(self):
+        self.lessons = ["Cores", "Números", "Formas"]
+        self.tts = TextToSpeech()
+    
+    def display_options(self):
+        print("n\[Walle] Escolha uma lição:")
+        for i, lesson in enumerate(self.lessons, 1):
+           print(f"{i}. {lesson}")
+
+    def start_session(self):
+        self.display_options()
+        choice = int(input("Digite o número da lição"))
+
+        if 1 <= choice <= len(self.lessons):
+            lesson = self.lessons[choice - 1]
+            self.tts.speal(f"Iniciando lição sobre {lesson}.")
+            self.simulate_lesson(lesson)
+        else:
+            print("\n[Walle] Opção inválida.")
+
+    def simulate_lesson(self, lesson):
+        questions = {
+            "Cores": ["Qual é a cor do céu?", "Qual é a cor da grama?"],
+            "Números": ["Quanto é 2 + 2?", "Quanto é 3 - 1?"],
+            "Formas": ["Qual forma tem 3 lados?", "Qual forma é redonda?"],
+         }
+
+        print(f"\n[Walle] Lição: {lesson}")
