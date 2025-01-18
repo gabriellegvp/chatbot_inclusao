@@ -63,7 +63,7 @@ class InteractiveLearning:
 
         if 1 <= choice <= len(self.lessons):
             lesson = self.lessons[choice - 1]
-            self.tts.speal(f"Iniciando lição sobre {lesson}.")
+            self.tts.speak(f"Iniciando lição sobre {lesson}.")
             self.simulate_lesson(lesson)
         else:
             print("\n[Walle] Opção inválida.")
@@ -76,3 +76,33 @@ class InteractiveLearning:
          }
 
         print(f"\n[Walle] Lição: {lesson}")
+        for question in questions.get(lesson,[]):
+            print(question)
+            self.tts.speak(question)
+            input("Sua resposta: ")
+            print("[Walle] Muito bem!")
+
+class SocialIntegration:
+    def __init__(self):
+        self.tts = TextToSpeech()
+
+    def initiate_integration(self):
+        print("\n[Walle] Vamos trabalhar na integração social!")
+        options = [
+            "Sorrir e cumprimentarnamigos na escola.",
+            "Participar de uma atividade em grupo, como brincar de bola.",
+            "Compartilhar brinquedos e conversar sobre preferências.",
+        ]
+        for i, option in enumerate(options, 1):
+            print(f"{i}. {option}")
+        self.tts.speak("Escolha uma atividade para começar!")
+        choice = int(input("Digite o número da atividade: "))
+
+        if 1 <= choice <= len(options):
+            activity = options[choice -1]
+            self.tts.speak(f"Iniciando atividade:{activity}")
+            print(f"\n[Walle] {activity}")
+        else:
+            print("\n[Walle] Opção inválida.")
+
+class Walle
