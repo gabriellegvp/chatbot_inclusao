@@ -105,4 +105,29 @@ class SocialIntegration:
         else:
             print("\n[Walle] Opção inválida.")
 
-class Walle
+class Walle:
+    def __init__(self):
+        self.learning = InteractiveLearning()
+        self.integration = SocialIntegration()
+        self.crisis_support = CrisisSupport()
+
+    def start(self):
+        print("\n[Walle] Olá! Como posso ajudar hoje?")
+        print("1. Aprender algo novo.")
+        print("2. Trabalhar na integração social.")
+        print("3. Detectar e gerenciar crises.")
+        choice = int(input("Digite o número da sua escolha:"))
+
+        if choice == 1:
+            self.learning.start_session()
+        elif choice == 2:
+            self.integration.initiate_integration()
+        elif choice == 3:
+            self.crisis_support.manage_crisis()
+        else:
+            print("\n[Walle] Opção inválida.")
+
+# Inicialização do Walle
+if __name__ == "__main__":
+    walle = Walle()
+    walle.start()
