@@ -1,86 +1,115 @@
-#walle
 import json
 import random
 from textblob import TextBlob
 import pyttsx3
 
+
 class TextToSpeech:
     def __init__(self):
-        self.engine = pyttsx3.init()
-        self.engine.setProperty("rate", 150)
+        try:
+            self.engine = pyttsx3.init()
+            self.engine.setProperty("rate", 150)
+        except Exception as e:
+            print("[Walle] TTS não está disponível:", str(e))
+            self.engine = None
 
     def speak(self, text):
-        self.engine.say(text)
-        self.engine.runAndWait()
+        if self.engine:
+            self.engine.say(text)
+            self.engine.runAndWait()
+        else:
+            print(f"[Walle] (Simulado) {text}")
+
 
 class SentimentAnalysis:
     @staticmethod
     def analyze_text(text):
         analysis = TextBlob(text)
         return analysis.sentiment.polarity
-    
+
+
 class CrisisSupport:
     def __init__(self):
         self.tts = TextToSpeech()
         self.sentiment = SentimentAnalysis()
 
     def detect_crisis(self):
-        print("\n[Walle] Analisando situação da criança...")
-        mood = input("Digite a descrição da situação: ")
+        print("\n[Walle] Por favor, descreva sua situação ou como está se sentindo:")
+        mood = input("Digite aqui: ").strip()
+        
+        if not mood:
+            return False, "Nenhuma informação fornecida."
+        
         mood_score = self.sentiment.analyze_text(mood)
-
-        if mood_score < -0.5:
-            return True, "Alta probabilidade de crise dectada."
-        elif mood_score < 0:
-            return True, "Sinais leves de estresse detectada."
+        
+        if mood_score < -0.6:
+            return True, "Crise severa detectada. Você parece muito sobrecarregada ou triste."
+        elif -0.6 <= mood_score < -0.3:
+            return True, "Sinais de estresse moderado detectados. Talvez você precise de um momento para relaxar."
+        elif -0.3 <= mood_score < 0:
+            return False, "Sinais leves de tristeza detectados, mas nada grave."
         else:
-            return False, "Nenhuma crise detectada."
-    
+            return False, "Você parece estar bem ou positiva!"
+
+    def suggest_action(self, mood_message):
+        if "severa" in mood_message:
+            return "Recomendo buscar ajuda de alguém de confiança ou de um profissional de saúde mental."
+        elif "moderado" in mood_message:
+            return "Tente fazer algo que te relaxe, como ouvir música ou conversar com um amigo."
+        else:
+            return "Continue cuidando de si e aproveitando o momento."
+
     def manage_crisis(self):
         in_crisis, message = self.detect_crisis()
         self.tts.speak(message)
-
+        print(f"\n[Walle] {message}")
+        
         if in_crisis:
             action = self.suggest_action(message)
             self.tts.speak(action)
             print(f"\n[Walle] {action}")
         else:
-            print("\n[Walle] Tudo parece bem no momento!")
+            print("\n[Walle] Fico feliz em saber que você está bem!")
+
 
 class InteractiveLearning:
     def __init__(self):
         self.lessons = ["Cores", "Números", "Formas"]
         self.tts = TextToSpeech()
-    
+
     def display_options(self):
-        print("n\[Walle] Escolha uma lição:")
+        print("\n[Walle] Escolha uma lição:")
         for i, lesson in enumerate(self.lessons, 1):
-           print(f"{i}. {lesson}")
+            print(f"{i}. {lesson}")
 
     def start_session(self):
         self.display_options()
-        choice = int(input("Digite o número da lição"))
-
-        if 1 <= choice <= len(self.lessons):
-            lesson = self.lessons[choice - 1]
-            self.tts.speak(f"Iniciando lição sobre {lesson}.")
-            self.simulate_lesson(lesson)
-        else:
-            print("\n[Walle] Opção inválida.")
+        try:
+            choice = int(input("Digite o número da lição: "))
+            if 1 <= choice <= len(self.lessons):
+                lesson = self.lessons[choice - 1]
+                self.tts.speak(f"Iniciando lição sobre {lesson}.")
+                self.simulate_lesson(lesson)
+            else:
+                print("\n[Walle] Opção inválida.")
+        except ValueError:
+            print("\n[Walle] Entrada inválida! Por favor, digite um número.")
 
     def simulate_lesson(self, lesson):
         questions = {
             "Cores": ["Qual é a cor do céu?", "Qual é a cor da grama?"],
             "Números": ["Quanto é 2 + 2?", "Quanto é 3 - 1?"],
             "Formas": ["Qual forma tem 3 lados?", "Qual forma é redonda?"],
-         }
+        }
 
         print(f"\n[Walle] Lição: {lesson}")
-        for question in questions.get(lesson,[]):
+        for question in questions.get(lesson, []):
             print(question)
             self.tts.speak(question)
             input("Sua resposta: ")
-            print("[Walle] Muito bem!")
+            print("[Walle] Muito bem! Continue assim!")
+        print("[Walle] Lição concluída! Parabéns!")
+
 
 class SocialIntegration:
     def __init__(self):
@@ -89,21 +118,24 @@ class SocialIntegration:
     def initiate_integration(self):
         print("\n[Walle] Vamos trabalhar na integração social!")
         options = [
-            "Sorrir e cumprimentarnamigos na escola.",
+            "Sorrir e cumprimentar amigos na escola.",
             "Participar de uma atividade em grupo, como brincar de bola.",
             "Compartilhar brinquedos e conversar sobre preferências.",
         ]
         for i, option in enumerate(options, 1):
             print(f"{i}. {option}")
         self.tts.speak("Escolha uma atividade para começar!")
-        choice = int(input("Digite o número da atividade: "))
+        try:
+            choice = int(input("Digite o número da atividade: "))
+            if 1 <= choice <= len(options):
+                activity = options[choice - 1]
+                self.tts.speak(f"Iniciando atividade: {activity}")
+                print(f"\n[Walle] {activity}")
+            else:
+                print("\n[Walle] Opção inválida.")
+        except ValueError:
+            print("\n[Walle] Entrada inválida! Por favor, digite um número.")
 
-        if 1 <= choice <= len(options):
-            activity = options[choice -1]
-            self.tts.speak(f"Iniciando atividade:{activity}")
-            print(f"\n[Walle] {activity}")
-        else:
-            print("\n[Walle] Opção inválida.")
 
 class Walle:
     def __init__(self):
@@ -113,19 +145,27 @@ class Walle:
 
     def start(self):
         print("\n[Walle] Olá! Como posso ajudar hoje?")
-        print("1. Aprender algo novo.")
-        print("2. Trabalhar na integração social.")
-        print("3. Detectar e gerenciar crises.")
-        choice = int(input("Digite o número da sua escolha:"))
+        options = [
+            "Aprender algo novo.",
+            "Trabalhar na integração social.",
+            "Detectar e gerenciar crises.",
+        ]
+        for i, option in enumerate(options, 1):
+            print(f"{i}. {option}")
 
-        if choice == 1:
-            self.learning.start_session()
-        elif choice == 2:
-            self.integration.initiate_integration()
-        elif choice == 3:
-            self.crisis_support.manage_crisis()
-        else:
-            print("\n[Walle] Opção inválida.")
+        try:
+            choice = int(input("Digite o número da sua escolha: "))
+            if choice == 1:
+                self.learning.start_session()
+            elif choice == 2:
+                self.integration.initiate_integration()
+            elif choice == 3:
+                self.crisis_support.manage_crisis()
+            else:
+                print("\n[Walle] Opção inválida.")
+        except ValueError:
+            print("\n[Walle] Entrada inválida! Por favor, digite um número.")
+
 
 # Inicialização do Walle
 if __name__ == "__main__":
