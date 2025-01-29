@@ -1,9 +1,79 @@
 import json
 import random
+import sqlite3
 from textblob import TextBlob
 import pyttsx3
+from datetime import datetime
 
 
+# Configuração do Banco de Dados
+class Database:
+    def __init__(self, db_name="walle.db"):
+        self.conn = sqlite3.connect(db_name)
+        self.cursor = self.conn.cursor()
+        self._create_tables()
+
+    def _create_tables(self):
+        self.cursor.execute(
+            """
+            CREATE TABLE IF NOT EXISTS user_progress (
+                id INTEGER PRIMARY KEY AUTOINCREMENT,
+                user_name TEXT,
+                lesson_name TEXT,
+                score INTEGER,
+                date TEXT
+            )
+            """
+        )
+        self.cursor.execute(
+            """
+            CREATE TABLE IF NOT EXISTS sentiment_history (
+                id INTEGER PRIMARY KEY AUTOINCREMENT,
+                user_name TEXT,
+                sentiment_score REAL,
+                date TEXT
+            )
+            """
+        )
+        self.conn.commit()
+
+    def save_progress(self, user_name, lesson_name, score):
+        date = datetime.now().strftime("%Y-%m-%d %H:%M:%S")
+        self.cursor.execute(
+            """
+            INSERT INTO user_progress (user_name, lesson_name, score, date)
+            VALUES (?, ?, ?, ?)
+            """,
+            (user_name, lesson_name, score, date),
+        )
+        self.conn.commit()
+
+    def save_sentiment(self, user_name, sentiment_score):
+        date = datetime.now().strftime("%Y-%m-%d %H:%M:%S")
+        self.cursor.execute(
+            """
+            INSERT INTO sentiment_history (user_name, sentiment_score, date)
+            VALUES (?, ?, ?)
+            """,
+            (user_name, sentiment_score, date),
+        )
+        self.conn.commit()
+
+    def get_user_progress(self, user_name):
+        self.cursor.execute(
+            """
+            SELECT lesson_name, score, date FROM user_progress
+            WHERE user_name = ?
+            """,
+            (user_name,),
+        )
+        return self.cursor.fetchall()
+
+    def close(self):
+        self.conn.close()
+
+
+# Text-to-Speech
 class TextToSpeech:
     def __init__(self):
         try:
@@ -21,6 +91,7 @@ class TextToSpeech:
             print(f"[Walle] (Simulado) {text}")
 
 
+# Análise de Sentimentos
 class SentimentAnalysis:
     @staticmethod
     def analyze_text(text):
@@ -28,20 +99,23 @@ class SentimentAnalysis:
         return analysis.sentiment.polarity
 
 
+# Suporte a Crises
 class CrisisSupport:
-    def __init__(self):
+    def __init__(self, db):
         self.tts = TextToSpeech()
         self.sentiment = SentimentAnalysis()
+        self.db = db
 
-    def detect_crisis(self):
+    def detect_crisis(self, user_name):
         print("\n[Walle] Por favor, descreva sua situação ou como está se sentindo:")
         mood = input("Digite aqui: ").strip()
-        
+
         if not mood:
             return False, "Nenhuma informação fornecida."
-        
+
         mood_score = self.sentiment.analyze_text(mood)
-        
+        self.db.save_sentiment(user_name, mood_score)
+
         if mood_score < -0.6:
             return True, "Crise severa detectada. Você parece muito sobrecarregada ou triste."
         elif -0.6 <= mood_score < -0.3:
@@ -59,11 +133,11 @@ class CrisisSupport:
         else:
             return "Continue cuidando de si e aproveitando o momento."
 
-    def manage_crisis(self):
-        in_crisis, message = self.detect_crisis()
+    def manage_crisis(self, user_name):
+        in_crisis, message = self.detect_crisis(user_name)
         self.tts.speak(message)
         print(f"\n[Walle] {message}")
-        
+
         if in_crisis:
             action = self.suggest_action(message)
             self.tts.speak(action)
@@ -72,24 +146,27 @@ class CrisisSupport:
             print("\n[Walle] Fico feliz em saber que você está bem!")
 
 
+# Aprendizado Interativo
 class InteractiveLearning:
-    def __init__(self):
+    def __init__(self, db):
         self.lessons = ["Cores", "Números", "Formas"]
         self.tts = TextToSpeech()
+        self.db = db
 
     def display_options(self):
         print("\n[Walle] Escolha uma lição:")
         for i, lesson in enumerate(self.lessons, 1):
             print(f"{i}. {lesson}")
 
-    def start_session(self):
+    def start_session(self, user_name):
         self.display_options()
         try:
             choice = int(input("Digite o número da lição: "))
             if 1 <= choice <= len(self.lessons):
                 lesson = self.lessons[choice - 1]
                 self.tts.speak(f"Iniciando lição sobre {lesson}.")
-                self.simulate_lesson(lesson)
+                score = self.simulate_lesson(lesson)
+                self.db.save_progress(user_name, lesson, score)
             else:
                 print("\n[Walle] Opção inválida.")
         except ValueError:
@@ -103,14 +180,18 @@ class InteractiveLearning:
         }
 
         print(f"\n[Walle] Lição: {lesson}")
+        score = 0
         for question in questions.get(lesson, []):
             print(question)
             self.tts.speak(question)
             input("Sua resposta: ")
+            score += 1
             print("[Walle] Muito bem! Continue assim!")
         print("[Walle] Lição concluída! Parabéns!")
+        return score
 
 
+# Integração Social
 class SocialIntegration:
     def __init__(self):
         self.tts = TextToSpeech()
@@ -137,18 +218,22 @@ class SocialIntegration:
             print("\n[Walle] Entrada inválida! Por favor, digite um número.")
 
 
+# Classe Principal
 class Walle:
     def __init__(self):
-        self.learning = InteractiveLearning()
+        self.db = Database()
+        self.learning = InteractiveLearning(self.db)
         self.integration = SocialIntegration()
-        self.crisis_support = CrisisSupport()
+        self.crisis_support = CrisisSupport(self.db)
 
     def start(self):
-        print("\n[Walle] Olá! Como posso ajudar hoje?")
+        user_name = input("[Walle] Qual é o seu nome? ").strip()
+        print(f"\n[Walle] Olá, {user_name}! Como posso ajudar hoje?")
         options = [
             "Aprender algo novo.",
             "Trabalhar na integração social.",
             "Detectar e gerenciar crises.",
+            "Ver meu progresso.",
         ]
         for i, option in enumerate(options, 1):
             print(f"{i}. {option}")
@@ -156,11 +241,19 @@ class Walle:
         try:
             choice = int(input("Digite o número da sua escolha: "))
             if choice == 1:
-                self.learning.start_session()
+                self.learning.start_session(user_name)
             elif choice == 2:
                 self.integration.initiate_integration()
             elif choice == 3:
-                self.crisis_support.manage_crisis()
+                self.crisis_support.manage_crisis(user_name)
+            elif choice == 4:
+                progress = self.db.get_user_progress(user_name)
+                if progress:
+                    print("\n[Walle] Seu progresso:")
+                    for lesson, score, date in progress:
+                        print(f"- {lesson}: {score} pontos em {date}")
+                else:
+                    print("\n[Walle] Nenhum progresso registrado ainda.")
             else:
                 print("\n[Walle] Opção inválida.")
         except ValueError:
@@ -171,3 +264,4 @@ class Walle:
 if __name__ == "__main__":
     walle = Walle()
     walle.start()
+    walle.db.close()
