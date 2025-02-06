@@ -4,7 +4,11 @@ import sqlite3
 from textblob import TextBlob
 import pyttsx3
 from datetime import datetime
+import logging
 
+# Configuração de logging
+logging.basicConfig(level=logging.INFO)
+logger = logging.getLogger(__name__)
 
 # Configuração do Banco de Dados
 class Database:
@@ -80,7 +84,7 @@ class TextToSpeech:
             self.engine = pyttsx3.init()
             self.engine.setProperty("rate", 150)
         except Exception as e:
-            print("[Walle] TTS não está disponível:", str(e))
+            logger.error(f"TTS não está disponível: {str(e)}")
             self.engine = None
 
     def speak(self, text):
@@ -88,7 +92,7 @@ class TextToSpeech:
             self.engine.say(text)
             self.engine.runAndWait()
         else:
-            print(f"[Walle] (Simulado) {text}")
+            logger.info(f"[Walle] (Simulado) {text}")
 
 
 # Análise de Sentimentos
@@ -228,6 +232,10 @@ class Walle:
 
     def start(self):
         user_name = input("[Walle] Qual é o seu nome? ").strip()
+        if not user_name:
+            print("\n[Walle] Nome inválido. Por favor, insira um nome válido.")
+            return
+
         print(f"\n[Walle] Olá, {user_name}! Como posso ajudar hoje?")
         options = [
             "Aprender algo novo.",
